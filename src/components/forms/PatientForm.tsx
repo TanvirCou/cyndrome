@@ -16,6 +16,8 @@ import {
 import { Input } from "@/components/ui/input"
 import 'react-phone-number-input/style.css'
 import PhoneInput from 'react-phone-number-input'
+import { useRouter } from "next/navigation"
+import { CreateUser } from "@/actions/patient"
 
 const formSchema = z.object({
     fullName: z.string().min(2, { message: "Name must be at least 2 characters.", }).max(50, { message: "Name must be lower than 50 characters" }),
@@ -35,14 +37,23 @@ const PatientForm = () => {
     })
 
     const { isSubmitting } = form.formState;
+    const router = useRouter();
 
     // 2. Define a submit handler.
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        console.log(values)
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        try {
+            const user = await CreateUser(values);
+            console.log(user);
+
+            if (!!user) {
+                router.push(`patient/${user.$id}/registration`);
+            }
+        } catch (error) {
+            console.log(error);
+
+        }
     }
-    
+
     return (
         <div className="flex justify-center">
             <Form {...form}>
@@ -89,7 +100,7 @@ const PatientForm = () => {
                                         withCountryCallingCode
                                         placeholder="Enter phone number"
                                         className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400  focus:ring-cyan-400"
-                                        />
+                                    />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
