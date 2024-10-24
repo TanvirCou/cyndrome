@@ -19,45 +19,102 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import PhoneInput from 'react-phone-number-input'
 import { useRouter } from "next/navigation"
-import { CreateUser } from "@/actions/patient"
+import { CreateUser, registerPatient } from "@/actions/patient"
 import { useState } from "react"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { Checkbox } from "@/components/ui/checkbox"
+import { UploadDropzone } from "@/lib/utils/uploadthing";
+import Image from "next/image";
+
+const gender = [{ label: "Male", value: "male" }, { label: "Female", value: "female" }, { label: "Other", value: "other" }];
+const doctors = [{ label: "Dr. John Doe", value: "dr.johndoe" }, { label: "Dr. Jane Smith", value: "dr.janesmith" }];
+const identificationTypes = [{ label: "Passport", value: "passport" }, { label: "Driver's License", value: "driverslicense" }, { label: "National ID", value: "nationalid" }, { label: "Birth Certificate", value: "birthcertificate" }, { label: "Other", value: "other" }];
+
 
 
 const formSchema = z.object({
     fullName: z.string().min(2, { message: "Name must be at least 2 characters.", }).max(50, { message: "Name must be lower than 50 characters" }),
     email: z.string().email({ message: "Invalid email address." }),
     phoneNumber: z.string().min(10, { message: "Phone number must be at least 10 digits." }).max(15, { message: "Phone number must be lower than 15 digits." }),
-    birthday: z.string(),
-    gender: z.string(),
+    gender: z.enum(["male", "female", "other"], { required_error: "You need to select gender.", }),
+    address: z.string().min(5, { message: "Address must be at least 5 characters." }).max(100, { message: "Address must be lower than 100 characters" }),
+    occupation: z.string().min(5, { message: "Occupation must be at least 5 characters." }).max(50, { message: "Occupation must be lower than 100 characters" }),
+    emergencyContactName: z.string().min(2, { message: "Name must be at least 2 characters." }).max(50, { message: "Name must be lower than 50 characters" }),
+    emergencyContactNumber: z.string().min(10, { message: "Phone number must be at least 10 digits." }).max(15, { message: "Phone number must be lower than 15 digits." }),
+    primaryPhysician: z.string({required_error: "You need to select primary physician." }),
+    insuranceProvider: z.string().min(2, { message: "Name must be at least 2 characters." }).max(50, { message: "Name must be lower than 50 characters" }),
+    insurancePolicyNumber: z.string().min(5, { message: "Policy number must be at least 5 characters." }).max(50, { message: "Policy number must be lower than 50 characters" }),
+    allergies: z.string().optional(),
+    currentMedication: z.string().optional(),
+    familyMedicalHistory: z.string().optional(),
+    pastMedicalHistory: z.string().optional(),
+    identificationType: z.enum(["passport", "driverslicense", "nationalid", "birthcertificate", "other"]).optional(),
+    identificationNumber: z.string().optional(),
+    treatmentConsent: z.boolean().default(false).refine((value) => value === true, {message: "You must consent to treatment in order to proceed",}),
+    disclosureConsent: z.boolean().default(false).refine((value) => value === true, {message: "You must consent to disclosure in order to proceed",}),
+    privacyConsent: z.boolean().default(false).refine((value) => value === true, {message: "You must consent to privacy in order to proceed",}),
 });
 
 
-const gender = [{ label: "Male", value: "male" }, { label: "Female", value: "female" }, { label: "Other", value: "other" }];
 
-
-const RegistrationForm = () => {
+const RegistrationForm = ({userId} : {userId: string}) => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             fullName: "",
             email: "",
             phoneNumber: "",
-            birthday: "",
-            gender: ""
+            gender: undefined,
+            address: "",
+            occupation: "",
+            emergencyContactName: "",
+            emergencyContactNumber: "",
+            primaryPhysician: undefined,
+            insuranceProvider: "",
+            insurancePolicyNumber: "",
+            allergies: "",
+            currentMedication: "",
+            familyMedicalHistory: "",
+            pastMedicalHistory: "",
+            identificationType: undefined,
+            identificationNumber: "",
+            treatmentConsent: false,
+            disclosureConsent: false,
+            privacyConsent: false,
         },
     })
 
     const { isSubmitting } = form.formState;
     const router = useRouter();
     const [startDate, setStartDate] = useState(new Date());
+    const [imageUrl, setImageUrl] = useState<string>("");
+    
 
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
         try {
-            console.log(values);
+            const newPatient = {
+                ...values, 
+                birthDate: startDate,
+                identificationDocument: imageUrl,
+                userId: userId
+            }
+
+            const patient = await registerPatient(newPatient);
+            console.log(patient);
             
+            
+            if(!!patient) router.push(`/patient/${userId}/new-appointment`)
+
         } catch (error) {
             console.log(error);
 
@@ -68,6 +125,7 @@ const RegistrationForm = () => {
         <div className="flex justify-center">
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-[90%]">
+                    <p className='font-medium'>Personal Information</p>
                     <FormField
                         control={form.control}
                         name="fullName"
@@ -126,20 +184,12 @@ const RegistrationForm = () => {
 
                     <div className="flex items-center gap-x-4">
                         <div className="w-1/2">
-                            <FormField
-                                control={form.control}
-                                name="birthday"
-                                render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Date of Birth</FormLabel>
-                                        <br />
-                                        <FormControl>
+                                    
                                             <DatePicker dateFormat="MM/dd/yyyy" placeholderText="Click to select a birth date" selected={startDate} onChange={(date) => setStartDate(date!)} className="border h-10 rounded px-1 w-[300px] focus:outline-none focus:outline-cyan-400 focus:border-cyan-400  focus:ring-cyan-400" />
-                                        </FormControl>
-                                        <FormMessage />
+                                        
                                     </FormItem>
-                                )}
-                            />
                         </div>
                         <div className="w-1/2">
                             <FormField
@@ -149,17 +199,17 @@ const RegistrationForm = () => {
                                     <FormItem>
                                         <FormLabel>Gender</FormLabel>
                                         <FormControl>
-                                        <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-3">
-                                            {
-                                                gender.map((genderOption, index) => (
-                                                    <div className="flex items-center space-x-1" key={index}>
-                                                        <RadioGroupItem  value={genderOption.value} id={genderOption.value} />
-                                                        <Label htmlFor={genderOption.label}>{genderOption.label}</Label>
-                                                    </div>
-        
-                                                
-                                                ))
-                                            }
+                                            <RadioGroup onValueChange={field.onChange} defaultValue={field.value} className="flex space-x-3">
+                                                {
+                                                    gender.map((genderOption, index) => (
+                                                        <div className="flex items-center space-x-1" key={index}>
+                                                            <RadioGroupItem value={genderOption.value} id={genderOption.value} />
+                                                            <Label htmlFor={genderOption.label}>{genderOption.label}</Label>
+                                                        </div>
+
+
+                                                    ))
+                                                }
                                             </RadioGroup>
 
                                         </FormControl>
@@ -169,6 +219,344 @@ const RegistrationForm = () => {
                             />
                         </div>
                     </div>
+
+                    <div className="flex items-center gap-x-4">
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="address"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Address</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="14 street,New York" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="occupation"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Occupation</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Software Engineer" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-x-4">
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="emergencyContactName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Emergency Contact Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Guardian's name" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="emergencyContactNumber"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Emergency Contact Number</FormLabel>
+                                        <FormControl>
+                                            <PhoneInput
+                                                {...field}
+                                                defaultCountry="BD"
+                                                international
+                                                withCountryCallingCode
+                                                placeholder="Enter phone number"
+                                                className="border border-gray-300 py-1 rounded px-1 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400  focus:ring-cyan-400"
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <p className='font-medium pt-6'>Medical Information</p>
+
+                    <FormField
+                        control={form.control}
+                        name="primaryPhysician"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Primary Physician</FormLabel>
+                                <FormControl>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <SelectTrigger className="w-full border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400">
+                                            <SelectValue placeholder="Select a physician" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {
+                                                doctors.map(doctor => (
+                                                    <SelectItem value={doctor.value}>{doctor.label}</SelectItem>
+                                                ))
+                                            }
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+
+                    <div className="flex items-center gap-x-4">
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="insuranceProvider"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Insurance Provider</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="BlueCross BlueShield" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="insurancePolicyNumber"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Insurance Policy Number</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="ABCD12345678" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-x-4">
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="allergies"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Allergies(if any)</FormLabel>
+                                        <FormControl>
+                                            <Textarea placeholder="Peanuts, Penicillin etc" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="currentMedication"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Current Medication(if any)</FormLabel>
+                                        <FormControl>
+                                            <Textarea placeholder="Napa 500mg, Fexo 500 etc" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-x-4">
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="familyMedicalHistory"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Family medical history</FormLabel>
+                                        <FormControl>
+                                            <Textarea placeholder="Diabetes, Allergy etc" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+
+                        <div className="w-1/2">
+                            <FormField
+                                control={form.control}
+                                name="pastMedicalHistory"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Past Medical History</FormLabel>
+                                        <FormControl>
+                                            <Textarea placeholder="Diabetes, Allergy etc" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+
+                    <p className='font-medium pt-6'>Identification & Verification</p>
+
+                    <FormField
+                        control={form.control}
+                        name="identificationType"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Identification Type</FormLabel>
+                                <FormControl>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <SelectTrigger className="w-full border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400">
+                                            <SelectValue placeholder="Select an identification type" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {
+                                                identificationTypes.map(i => (
+                                                    <SelectItem key={i.value} value={i.value}>{i.label}</SelectItem>
+                                                ))
+                                            }
+                                        </SelectContent>
+                                    </Select>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="identificationNumber"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Identification Number</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="12345678" {...field} className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <div>
+                        <FormLabel>Scanned copy of identification document</FormLabel>
+                        <main>
+                            <div>
+                                {
+                                    !!imageUrl ?
+                                        <div className="relative">
+                                            <Image src={imageUrl} alt="" width={600} height={300} />
+                                            <p onClick={() => setImageUrl("")} className="cursor-pointer bg-white font-semibold px-2 text-lg rounded-full absolute right-2 top-2">x</p>
+                                        </div>
+                                        :
+                                        <UploadDropzone
+                                            className="ut-label:text-teal-600 border-cyan-500 ut-allowed-content:hidden ut-button:bg-cyan-500 ut-upload-icon:text-cyan-500 cursor-pointer"
+                                            endpoint="imageUploader"
+                                            onClientUploadComplete={(res: any) => {
+                                                setImageUrl(res[0].url);
+                                            }}
+                                            onUploadError={(error: Error) => {
+                                                // Do something with the error.
+                                                alert(`ERROR! ${error.message}`);
+                                            }}
+                                        />
+                                }
+                            </div>
+                        </main>
+                    </div>
+
+                    <p className='font-medium pt-6'>Privacy & Consent</p>
+
+                    <FormField
+                        control={form.control}
+                        name="treatmentConsent"
+                        render={({ field }) => (
+                            <FormItem >
+                                <div className="flex items-center space-x-2">
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                    <FormLabel>I consent to treatment</FormLabel>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                    <FormField
+                        control={form.control}
+                        name="disclosureConsent"
+                        render={({ field }) => (
+                            <FormItem >
+                                <div className="flex items-center space-x-2">
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                    <FormLabel>I consent to disclosure of information</FormLabel>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="privacyConsent"
+                        render={({ field }) => (
+                            <FormItem >
+                                <div className="flex items-center space-x-2">
+                                    <FormControl>
+                                        <Checkbox
+                                            checked={field.value}
+                                            onCheckedChange={field.onChange}
+                                        />
+                                    </FormControl>
+                                    <FormLabel>I consent to privacy policy</FormLabel>
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+
                     <Button type="submit" disabled={isSubmitting} className="bg-cyan-500 w-full">{isSubmitting ? "Loading..." : "Get Started"}</Button>
                 </form>
             </Form>
