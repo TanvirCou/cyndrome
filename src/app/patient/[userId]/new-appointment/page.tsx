@@ -13,7 +13,7 @@ const RegistrationPage = async({params: {userId}}: SearchParamProps) => {
   const pId = patient?.$id as string;
   
   return (
-    <div className="h-screen w-full bg-gray-50 ">
+    <div className="h-screen w-full bg-gray-50">
       <div className="flex w-full ">
         <div className="w-[60%] p-10">
           <div className="flex items-center gap-1">
