@@ -51,9 +51,9 @@ declare type SearchParamProps = {
     note: string | undefined;
   };
   
-//   declare type UpdateAppointmentParams = {
-//     appointmentId: string;
-//     userId: string;
-//     appointment: Appointment;
-//     type: string;
-//   };
+  declare type UpdateAppointmentParams = {
+    appointmentId: string;
+    userId: string;
+    appointment: Appointment;
+    type: string;
+  };

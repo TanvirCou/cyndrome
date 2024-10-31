@@ -26,32 +26,34 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useState } from "react"
 import { Textarea } from "../ui/textarea"
-import { createAppointment } from "@/actions/appointments"
+import { createAppointment, updateAppointment } from "@/actions/appointments"
+import { Appointment } from "@/types/appwrite.types"
 
-const doctors = [{ label: "Dr. John Doe", value: "dr.johndoe" }, { label: "Dr. Jane Smith", value: "dr.janesmith" }];
+export const doctors = [{ label: "Dr. John Doe", value: "dr.johndoe" }, { label: "Dr. Jane Smith", value: "dr.janesmith" }];
 
 const formSchema = z.object({
     primaryPhysician: z.string({ required_error: "You need to select primary physician." }),
     appointmentReason: z.string().min(5, { message: "Reason must be at least 5 characters." }).max(200, { message: "Reason must be lower than 200 characters" }),
     note: z.string().optional(),
     cancellationReason: z.string().optional(),
+    schedule: z.date({required_error: "You need to select an appointment date."})
 })
 
 
-const AppointmentForm = ({ userId, patientId, type }: { userId: string, patientId: string, type: "create" | "cancel" | "schedule" }) => {
+const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { userId: string, patientId: string, type: "create" | "cancel" | "schedule", appointment: Appointment, setOpen: (open: boolean) => void }) => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            primaryPhysician: undefined,
-            appointmentReason: "",
-            note: "",
-            cancellationReason: "",
+            primaryPhysician: appointment ? appointment.primaryPhysician : "",
+            schedule: appointment? new Date(appointment.schedule)! : new Date(Date.now())!,
+            appointmentReason: appointment ? appointment.reason : "",
+            note: appointment ? appointment.note : "",
+            cancellationReason: appointment?.cancellationReason || "",
         },
     })
 
     const { isSubmitting } = form.formState;
     const router = useRouter();
-    const [startDate, setStartDate] = useState<Date>();
 
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -67,6 +69,7 @@ const AppointmentForm = ({ userId, patientId, type }: { userId: string, patientI
                 status = "pending";
                 break;
         }
+        
         try {
             if (type === "create" && patientId) {
                 const appointmentData = {
@@ -74,7 +77,7 @@ const AppointmentForm = ({ userId, patientId, type }: { userId: string, patientI
                     patient: patientId,
                     primaryPhysician: values.primaryPhysician,
                     reason: values.appointmentReason,
-                    schedule: new Date(startDate!),
+                    schedule: new Date(values.schedule),
                     status: status as Status,
                     note: values.note
                 }
@@ -85,6 +88,27 @@ const AppointmentForm = ({ userId, patientId, type }: { userId: string, patientI
                 if (!!newAppointment) {
                     form.reset();
                     router.push(`/patient/${userId}/new-appointment/success?appointmentId=${newAppointment.$id}`);
+                }
+            } else {
+                const appointmentData = {
+                    userId,
+                    appointmentId: appointment.$id,
+                    appointment: {
+                        primaryPhysician: values.primaryPhysician,
+                        reason: values.appointmentReason,
+                        schedule: new Date(values.schedule),
+                        status: status as Status,
+                        note: values.note,
+                        cancellationReason: values.cancellationReason
+                    },
+                    type: type
+                }
+
+                const updatedAppointment = await updateAppointment(appointmentData);
+
+                if (!!updatedAppointment) {
+                    setOpen && setOpen(false)
+                    form.reset();
                 }
             }
 
@@ -111,9 +135,9 @@ const AppointmentForm = ({ userId, patientId, type }: { userId: string, patientI
     }
 
     return (
-        <div className="flex justify-center">
+        <div className={`${type === "create" ? "flex justify-center" : "flex flex-col items-center"}`}>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-[90%]">
+                <form onSubmit={form.handleSubmit(onSubmit)} className={`space-y-6 ${type === "create" ? "w-[90%]" : "w-[70%]"}`}>
                     {type !== "cancel" && (
                         <>
                             <FormField
@@ -141,12 +165,20 @@ const AppointmentForm = ({ userId, patientId, type }: { userId: string, patientI
                                 )}
                             />
 
-                            <FormItem>
-                                <FormLabel>Expected Appointment Date</FormLabel>
-                                <br />
-                                <DatePicker dateFormat="MM/dd/yyyy - h:mm aa" showTimeSelect placeholderText="Click to select a appointment date" selected={startDate} onChange={(date) => setStartDate(date!)} className="border h-10 rounded px-1 w-[610px] focus:outline-none focus:outline-cyan-400 focus:border-cyan-400  focus:ring-cyan-400" />
 
-                            </FormItem>
+                            <FormField
+                                        control={form.control}
+                                        name="schedule"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Expected Appointment Date</FormLabel>
+                                                <FormControl>
+                                                <DatePicker dateFormat="MM/dd/yyyy - h:mm aa" showTimeSelect  placeholderText="Click to select a appointment date" selected={field.value} onChange={(date) => field.onChange(date!)} className={`border rounded h-10 px-2 ${type === "create" ? "w-[610px]": "w-[320px]"} border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400`}/>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
 
                             <div className="flex items-center gap-x-4">
 
