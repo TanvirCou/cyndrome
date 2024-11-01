@@ -1,6 +1,8 @@
 "use server"
-import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, databases, PATIENT_COLLECTION_ID } from "@/lib/appwrite.config";
+import { APPOINTMENT_COLLECTION_ID, DATABASE_ID, databases, messaging, PATIENT_COLLECTION_ID } from "@/lib/appwrite.config";
+import { formatDateTime } from "@/lib/utils";
 import { Appointment } from "@/types/appwrite.types";
+import { log } from "console";
 import { revalidatePath } from "next/cache";
 import { ID, Query } from "node-appwrite";
 
@@ -98,10 +100,28 @@ export const getRecentAppointmentList = async () => {
   
       if (!updatedAppointment) throw Error;
 
+      const smsMessage = `Greetings from Cyndrome. ${type === "schedule" ? `Your appointment is confirmed for ${formatDateTime(appointment.schedule!).dateTime} with Dr. ${appointment.primaryPhysician}` : `We regret to inform that your appointment for ${formatDateTime(appointment.schedule!).dateTime} is cancelled. Reason:  ${appointment.cancellationReason}`}.`;
+      await sendSMSNotification(userId, smsMessage);
+
       revalidatePath("/admin");
       return updatedAppointment;
     } catch (error) {
       console.error("An error occurred while scheduling an appointment:", error);
     }
   };
+
+const sendSMSNotification = async(userId: string, content: string) => {
+  try {
+    const message = await messaging.createSms(
+      ID.unique(),
+      content,
+      [],
+      [userId]
+    );
+
+    return message;
+  } catch (error) {
+    console.log(error);
+  }
+} 
   

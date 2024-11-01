@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { UploadDropzone } from "@/lib/utils/uploadthing";
 import Image from "next/image";
+import calendarPic from "../../../public/calendar-icon.jpg";
 
 const gender = [{ label: "Male", value: "male" }, { label: "Female", value: "female" }, { label: "Other", value: "other" }];
 const doctors = [{ label: "Dr. John Doe", value: "dr.johndoe" }, { label: "Dr. Jane Smith", value: "dr.janesmith" }];
@@ -110,7 +111,6 @@ const RegistrationForm = ({userId} : {userId: string}) => {
             }
 
             const patient = await registerPatient(newPatient);
-            console.log(patient);
             
             
             if(!!patient) router.push(`/patient/${userId}/new-appointment`)
@@ -124,8 +124,8 @@ const RegistrationForm = ({userId} : {userId: string}) => {
     return (
         <div className="flex justify-center">
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-[90%]">
-                    <p className='font-medium'>Personal Information</p>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-[95%] md:w-[93%] lg:w-[90%]">
+                    <p className='font-semibold'>Personal Information</p>
                     <FormField
                         control={form.control}
                         name="fullName"
@@ -140,9 +140,9 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         )}
                     />
 
-                    <div className="flex items-center gap-x-4">
+                    <div className="md:flex items-center gap-x-4">
 
-                        <div className="w-1/2">
+                        <div className="w-full md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="email"
@@ -158,7 +158,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                             />
                         </div>
 
-                        <div className="w-1/2">
+                        <div className="pt-6 md:pt-0 w-full md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="phoneNumber"
@@ -182,16 +182,18 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-x-4">
-                        <div className="w-1/2">
+                    <div className="md:flex items-center gap-x-4">
+                        <div className="w-full md:w-1/2">
                                     <FormItem>
                                         <FormLabel>Date of Birth</FormLabel>
-                                    
-                                            <DatePicker dateFormat="MM/dd/yyyy" placeholderText="Click to select a birth date" selected={startDate} onChange={(date) => setStartDate(date!)} className="border h-10 rounded px-1 w-[300px] focus:outline-none focus:outline-cyan-400 focus:border-cyan-400  focus:ring-cyan-400" />
+                                            <div className="flex items-center  border rounded-md">
+                                            <Image src={calendarPic} alt="Calendar" className="h-8 w-8" />
+                                            <DatePicker dateFormat="MM/dd/yyyy" placeholderText="Click to select a birth date" selected={startDate} onChange={(date) => setStartDate(date!)} className=" h-10 rounded px-1 w-[300px] md:w-[250px] lg:w-[180px] xl:w-[250px] focus:outline-none focus:outline-cyan-400 focus:border-cyan-400  focus:ring-cyan-400" />
                                         
+                                            </div>
                                     </FormItem>
                         </div>
-                        <div className="w-1/2">
+                        <div className="w-full pt-6 md:pt-0 md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="gender"
@@ -220,9 +222,9 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-x-4">
+                    <div className="md:flex items-center gap-x-4">
 
-                        <div className="w-1/2">
+                        <div className="w-full md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="address"
@@ -238,7 +240,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                             />
                         </div>
 
-                        <div className="w-1/2">
+                        <div className="w-full pt-6 md:pt-0 md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="occupation"
@@ -255,9 +257,9 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-x-4">
+                    <div className="md:flex items-center gap-x-4">
 
-                        <div className="w-1/2">
+                        <div className="w-full md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="emergencyContactName"
@@ -273,7 +275,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                             />
                         </div>
 
-                        <div className="w-1/2">
+                        <div className="w-full pt-6 md:pt-0 md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="emergencyContactNumber"
@@ -297,7 +299,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         </div>
                     </div>
 
-                    <p className='font-medium pt-6'>Medical Information</p>
+                    <p className='font-semibold pt-6'>Medical Information</p>
 
                     <FormField
                         control={form.control}
@@ -325,9 +327,9 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                     />
 
 
-                    <div className="flex items-center gap-x-4">
+                    <div className="md:flex items-center gap-x-4">
 
-                        <div className="w-1/2">
+                        <div className="w-full md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="insuranceProvider"
@@ -343,7 +345,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                             />
                         </div>
 
-                        <div className="w-1/2">
+                        <div className="w-full pt-6 md:pt-0 md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="insurancePolicyNumber"
@@ -360,9 +362,9 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-x-4">
+                    <div className="md:flex items-center gap-x-4">
 
-                        <div className="w-1/2">
+                        <div className="w-full md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="allergies"
@@ -378,7 +380,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                             />
                         </div>
 
-                        <div className="w-1/2">
+                        <div className="w-full pt-6 md:pt-0 md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="currentMedication"
@@ -395,9 +397,9 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-x-4">
+                    <div className="md:flex items-center gap-x-4">
 
-                        <div className="w-1/2">
+                        <div className="w-full md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="familyMedicalHistory"
@@ -413,7 +415,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                             />
                         </div>
 
-                        <div className="w-1/2">
+                        <div className="w-full pt-6 md:pt-0 md:w-1/2">
                             <FormField
                                 control={form.control}
                                 name="pastMedicalHistory"
@@ -430,7 +432,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         </div>
                     </div>
 
-                    <p className='font-medium pt-6'>Identification & Verification</p>
+                    <p className='font-semibold pt-6'>Identification & Verification</p>
 
                     <FormField
                         control={form.control}
@@ -498,7 +500,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                         </main>
                     </div>
 
-                    <p className='font-medium pt-6'>Privacy & Consent</p>
+                    <p className='font-semibold pt-6'>Privacy & Consent</p>
 
                     <FormField
                         control={form.control}

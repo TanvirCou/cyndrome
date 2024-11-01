@@ -57,7 +57,7 @@ const PatientForm = () => {
     return (
         <div className="flex justify-center">
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-[80%]">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-[90%] md:w-[90%] lg:w-[80%]">
                     <FormField
                         control={form.control}
                         name="fullName"
@@ -99,7 +99,7 @@ const PatientForm = () => {
                                         international
                                         withCountryCallingCode
                                         placeholder="Enter phone number"
-                                        className="border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400  focus:ring-cyan-400"
+                                        className="border border-gray-300 py-1 rounded px-1 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400  focus:ring-cyan-400"
                                     />
                                 </FormControl>
                                 <FormMessage />

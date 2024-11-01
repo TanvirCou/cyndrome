@@ -67,7 +67,7 @@ const Passkey = () => {
 
     return (
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-            <AlertDialogContent className='w-[28%]'>
+            <AlertDialogContent className='w-[80%] md:w-[40%] lg:w-[28%]'>
                 <AlertDialogHeader>
                     <AlertDialogTitle className='flex justify-between items-center'>
                         <p className='font-semibold text-md'>Admin access verification</p>

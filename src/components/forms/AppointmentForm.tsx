@@ -28,6 +28,8 @@ import { useState } from "react"
 import { Textarea } from "../ui/textarea"
 import { createAppointment, updateAppointment } from "@/actions/appointments"
 import { Appointment } from "@/types/appwrite.types"
+import Image from "next/image"
+import calendarPic from "../../../public/calendar-icon.jpg";
 
 export const doctors = [{ label: "Dr. John Doe", value: "dr.johndoe" }, { label: "Dr. Jane Smith", value: "dr.janesmith" }];
 
@@ -36,16 +38,16 @@ const formSchema = z.object({
     appointmentReason: z.string().min(5, { message: "Reason must be at least 5 characters." }).max(200, { message: "Reason must be lower than 200 characters" }),
     note: z.string().optional(),
     cancellationReason: z.string().optional(),
-    schedule: z.date({required_error: "You need to select an appointment date."})
+    schedule: z.date({ required_error: "You need to select an appointment date." })
 })
 
 
-const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { userId: string, patientId: string, type: "create" | "cancel" | "schedule", appointment: Appointment, setOpen: (open: boolean) => void }) => {
+const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { userId: string, patientId: string, type: "create" | "cancel" | "schedule", appointment?: Appointment, setOpen?: (open: boolean) => void }) => {
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             primaryPhysician: appointment ? appointment.primaryPhysician : "",
-            schedule: appointment? new Date(appointment.schedule)! : new Date(Date.now())!,
+            schedule: appointment ? new Date(appointment.schedule)! : new Date(Date.now())!,
             appointmentReason: appointment ? appointment.reason : "",
             note: appointment ? appointment.note : "",
             cancellationReason: appointment?.cancellationReason || "",
@@ -69,7 +71,7 @@ const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { us
                 status = "pending";
                 break;
         }
-        
+
         try {
             if (type === "create" && patientId) {
                 const appointmentData = {
@@ -92,7 +94,7 @@ const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { us
             } else {
                 const appointmentData = {
                     userId,
-                    appointmentId: appointment.$id,
+                    appointmentId: appointment?.$id!,
                     appointment: {
                         primaryPhysician: values.primaryPhysician,
                         reason: values.appointmentReason,
@@ -137,7 +139,7 @@ const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { us
     return (
         <div className={`${type === "create" ? "flex justify-center" : "flex flex-col items-center"}`}>
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className={`space-y-6 ${type === "create" ? "w-[90%]" : "w-[70%]"}`}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className={`space-y-6 ${type === "create" ? "w-[95%] md:w-[93%] lg:w-[90%]" : "w-[70%]"}`}>
                     {type !== "cancel" && (
                         <>
                             <FormField
@@ -167,22 +169,25 @@ const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { us
 
 
                             <FormField
-                                        control={form.control}
-                                        name="schedule"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel>Expected Appointment Date</FormLabel>
-                                                <FormControl>
-                                                <DatePicker dateFormat="MM/dd/yyyy - h:mm aa" showTimeSelect  placeholderText="Click to select a appointment date" selected={field.value} onChange={(date) => field.onChange(date!)} className={`border rounded h-10 px-2 ${type === "create" ? "w-[610px]": "w-[320px]"} border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400`}/>
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
+                                control={form.control}
+                                name="schedule"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Expected Appointment Date</FormLabel>
+                                        <FormControl>
+                                        <div className="flex items-center  border rounded-md">
+                                            <Image src={calendarPic} alt="Calendar" className="h-8 w-8" />
+                                            <DatePicker dateFormat="MM/dd/yyyy - h:mm aa" showTimeSelect placeholderText="Click to select a appointment date" selected={field.value} onChange={(date) => field.onChange(date!)} className={`h-10 px-1 ${type === "create" ? "w-[220px] md:w-[550px] lg:w-[420px] xl:w-[550px]" : "w-[180px] md:w-[250px]"} border-gray-300 focus:outline-none focus:outline-cyan-400 focus:border-cyan-400 focus:ring-cyan-400`} />
+                                        </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                            <div className="flex items-center gap-x-4">
+                            <div className="md:flex items-center gap-x-4">
 
-                                <div className="w-1/2">
+                                <div className="w-full md:w-1/2">
                                     <FormField
                                         control={form.control}
                                         name="appointmentReason"
@@ -198,7 +203,7 @@ const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { us
                                     />
                                 </div>
 
-                                <div className="w-1/2">
+                                <div className="w-full md:w-1/2 pt-6 md:pt-0">
                                     <FormField
                                         control={form.control}
                                         name="note"
