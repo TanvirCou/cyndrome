@@ -156,7 +156,7 @@ const AppointmentForm = ({ userId, patientId, type, appointment, setOpen }: { us
                                                 <SelectContent>
                                                     {
                                                         doctors.map(doctor => (
-                                                            <SelectItem value={doctor.value}>{doctor.label}</SelectItem>
+                                                            <SelectItem key={doctor.value} value={doctor.label}>{doctor.label}</SelectItem>
                                                         ))
                                                     }
                                                 </SelectContent>

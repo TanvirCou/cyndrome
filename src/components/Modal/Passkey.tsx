@@ -14,7 +14,7 @@ import {
     InputOTPGroup,
     InputOTPSlot,
 } from "@/components/ui/input-otp"
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { decryptKey, encryptKey } from '@/lib/utils';
 
 
@@ -23,9 +23,6 @@ const Passkey = () => {
     const [passkey, setPasskey] = useState('');
     const [error, setError] = useState('');
     const router = useRouter();
-    const path = usePathname();
-
-    console.log(path);
     
 
     const closeModal = () => {

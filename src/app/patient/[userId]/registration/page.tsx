@@ -5,6 +5,12 @@ import logo from "../../../../../public/main-logo.webp";
 import RegistrationForm from '@/components/forms/RegistrationForm';
 import { getUser } from '@/actions/patient';
 import Link from 'next/link';
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cyndrome | Registration",
+  description: "A health care management system",
+};
 
 const RegistrationPage = async({params: {userId}}: SearchParamProps) => {
   const user = await getUser(userId);

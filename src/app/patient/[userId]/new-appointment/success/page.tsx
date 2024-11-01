@@ -7,6 +7,12 @@ import { formatDateTime } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import calendarPic from "../../../../../../public/calendar-icon.jpg"
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cyndrome | Appointment Confirmation",
+  description: "A health care management system",
+};
 
 const page = async ({ params: { userId }, searchParams }: SearchParamProps) => {
     const appointmentId = (searchParams?.appointmentId as string) || '';

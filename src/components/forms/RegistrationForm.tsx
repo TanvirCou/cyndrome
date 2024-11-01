@@ -315,7 +315,7 @@ const RegistrationForm = ({userId} : {userId: string}) => {
                                         <SelectContent>
                                             {
                                                 doctors.map(doctor => (
-                                                    <SelectItem value={doctor.value}>{doctor.label}</SelectItem>
+                                                    <SelectItem key={doctor.value} value={doctor.label}>{doctor.label}</SelectItem>
                                                 ))
                                             }
                                         </SelectContent>

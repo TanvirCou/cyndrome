@@ -9,6 +9,12 @@ import { getRecentAppointmentList } from '@/actions/appointments';
 import { DataTable } from '@/components/table/data-table';
 import { columns } from '@/components/table/columns';
 import Link from 'next/link';
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Cyndrome | Admin Dashboard",
+  description: "A health care management system",
+};
 
 
 
